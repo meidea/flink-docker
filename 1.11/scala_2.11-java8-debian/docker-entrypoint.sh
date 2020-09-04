@@ -37,7 +37,16 @@ drop_privs_cmd() {
     fi
 }
 
+copy_files() {
+  echo "*********** list config files **************"
+  ls $FLINK_HOME/conf
+  echo "*********** list lib files **************"
+  ls $FLINK_HOME/lib
+  echo "********************************************"
+}
+
 copy_plugins_if_required() {
+
   if [ -z "$ENABLE_BUILT_IN_PLUGINS" ]; then
     return 0
   fi
@@ -74,13 +83,14 @@ set_config_option() {
 }
 
 set_common_options() {
-    set_config_option jobmanager.rpc.address ${JOB_MANAGER_RPC_ADDRESS}
+#    set_config_option jobmanager.rpc.address ${JOB_MANAGER_RPC_ADDRESS}
     set_config_option blob.server.port 6124
     set_config_option query.server.port 6125
 }
 
 prepare_job_manager_start() {
     echo "Starting Job Manager"
+    copy_files
     copy_plugins_if_required
 
     set_common_options
@@ -100,6 +110,7 @@ elif [ "$1" = "jobmanager" ]; then
 
     exec $(drop_privs_cmd) "$FLINK_HOME/bin/jobmanager.sh" start-foreground "$@"
 elif [ "$1" = ${COMMAND_STANDALONE} ]; then
+    echo "Try to start Standalone Job"
     shift 1
     prepare_job_manager_start
 
@@ -107,11 +118,11 @@ elif [ "$1" = ${COMMAND_STANDALONE} ]; then
 elif [ "$1" = "taskmanager" ]; then
     shift 1
     echo "Starting Task Manager"
+    copy_files
     copy_plugins_if_required
 
     TASK_MANAGER_NUMBER_OF_TASK_SLOTS=${TASK_MANAGER_NUMBER_OF_TASK_SLOTS:-$(grep -c ^processor /proc/cpuinfo)}
 
-    set_common_options
     set_config_option taskmanager.numberOfTaskSlots ${TASK_MANAGER_NUMBER_OF_TASK_SLOTS}
 
     if [ -n "${FLINK_PROPERTIES}" ]; then

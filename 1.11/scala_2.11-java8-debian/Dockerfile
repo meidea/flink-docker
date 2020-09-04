@@ -81,6 +81,18 @@ RUN set -ex; \
   chown -R flink:flink .;
 
 # Configure container
+RUN rm /opt/flink/conf/masters
+RUN rm /opt/flink/conf/workers
+RUN rm /opt/flink/conf/zoo.cfg
+RUN rm /opt/flink/conf/sql-client-defaults.yaml
+RUN rm /opt/flink/lib/log4j-slf4j-impl-2.12.1.jar
+COPY flink-conf.yaml /opt/flink/conf/
+COPY logback-console.xml /opt/flink/conf/
+COPY log4j-over-slf4j-1.7.30.jar /opt/flink/lib/
+COPY logback-classic-1.2.3.jar /opt/flink/lib/
+COPY logback-core-1.2.3.jar /opt/flink/lib/
+RUN chown -R flink:flink /opt/flink
+
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 EXPOSE 6123 8081
